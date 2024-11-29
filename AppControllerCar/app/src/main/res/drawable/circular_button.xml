@@ -1,13 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_pressed="true">
-        <shape android:shape="oval">
-            <solid android:color="#B1A8A5"/> <!-- Màu khi nhấn -->
-        </shape>
-    </item>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
     <item>
-        <shape android:shape="oval">
-            <solid android:color="#ACE294"/> <!-- Màu bình thường -->
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent"/>
+            <stroke
+                android:width="2dp"
+                android:color="@color/white"/>
+            <corners android:radius="15dp"/>
         </shape>
     </item>
-</selector>
+
+
+    <item android:top="2dp" android:left="2dp" android:right="2dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#A1EEBD"/>
+            <corners android:radius="18dp"/>
+        </shape>
+    </item>
+</layer-list>
