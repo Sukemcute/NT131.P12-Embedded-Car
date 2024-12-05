@@ -97,7 +97,7 @@
             android:textSize="28sp"
             android:layout_marginTop="16dp"/>
 
-        <Switch
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/doLineSwitch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -113,7 +113,7 @@
             android:textSize="28sp"
             android:layout_marginTop="16dp"/>
 
-        <Switch
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/neVatCanSwitch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
