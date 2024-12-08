@@ -16,6 +16,7 @@ import android.os.Parcelable;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothSocket bluetoothSocket;
     private OutputStream outputStream;
     private InputStream inputStream;
+    private TextView dataTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         SeekBar lightSeekBar = findViewById(R.id.lightSeekBar);
         SwitchCompat doLineSwitch = findViewById(R.id.doLineSwitch);
         SwitchCompat neVatCanSwitch = findViewById(R.id.neVatCanSwitch);
+        dataTextView = findViewById(R.id.viewData);
 
         upButton.setOnClickListener(v -> sendCommand("UP"));
         leftButton.setOnClickListener(v -> sendCommand("LEFT"));
@@ -172,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
                                 inputStream = bluetoothSocket.getInputStream();
                                 Toast.makeText(MainActivity.this, "Connected to device", Toast.LENGTH_SHORT).show();
                                 unregisterReceiver(this);
+                                startListeningForData();
                                 break;
                             } catch (IOException e) {
                                 Log.e(TAG, "Failed to connect to device with UUID: " + uuid, e);
@@ -199,6 +203,25 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Bluetooth is not connected", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void startListeningForData() {
+        new Thread(() -> {
+            byte[] buffer = new byte[1024]; // Buffer chứa dữ liệu nhận được
+            int bytes; // Số byte thực tế nhận được
+
+            while (bluetoothSocket != null && bluetoothSocket.isConnected()) {
+                try {
+                    // Đọc dữ liệu từ InputStream
+                    bytes = inputStream.read(buffer);
+                    String receivedData = new String(buffer, 0, bytes); // Chuyển đổi byte thành chuỗi
+                    runOnUiThread(() -> dataTextView.setText(receivedData)); // Cập nhật TextView trên UI thread
+                } catch (IOException e) {
+                    Log.e(TAG, "Error reading data", e);
+                    break;
+                }
+            }
+        }).start();
     }
 
     @Override
