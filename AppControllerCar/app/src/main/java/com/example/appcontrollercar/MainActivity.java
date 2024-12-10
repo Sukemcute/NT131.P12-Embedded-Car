@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private static final int REQUEST_BLUETOOTH_CONNECT = 1;
-    private static final int REQUEST_LOCATION_PERMISSION = 2;
 
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothSocket bluetoothSocket;
@@ -64,15 +63,15 @@ public class MainActivity extends AppCompatActivity {
         SwitchCompat neVatCanSwitch = findViewById(R.id.neVatCanSwitch);
         dataTextView = findViewById(R.id.viewData);
 
-        upButton.setOnClickListener(v -> sendCommand("UP"));
-        leftButton.setOnClickListener(v -> sendCommand("LEFT"));
-        rightButton.setOnClickListener(v -> sendCommand("RIGHT"));
-        downButton.setOnClickListener(v -> sendCommand("DOWN"));
+        upButton.setOnClickListener(v -> sendCommand('F'));
+        leftButton.setOnClickListener(v -> sendCommand('L'));
+        rightButton.setOnClickListener(v -> sendCommand('R'));
+        downButton.setOnClickListener(v -> sendCommand('B'));
 
         speedSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                sendCommand("SPEED:" + progress);
+                sendCommand((char) progress);
             }
 
             @Override
@@ -87,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         lightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                sendCommand("LIGHT:" + progress);
+                sendCommand((char) progress);
             }
 
             @Override
@@ -99,23 +98,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        doLineSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> sendCommand("DOLINE:" + (isChecked ? "ON" : "OFF")));
-        neVatCanSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> sendCommand("NEVATCAN:" + (isChecked ? "ON" : "OFF")));
+        doLineSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> sendCommand(isChecked ? 'L' : 'l'));
+        neVatCanSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> sendCommand(isChecked ? 'A' : 'a'));
     }
 
     private void checkPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED ||
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{
-                        Manifest.permission.BLUETOOTH_CONNECT,
-                        Manifest.permission.ACCESS_FINE_LOCATION
+                        Manifest.permission.BLUETOOTH_CONNECT
                 }, REQUEST_BLUETOOTH_CONNECT);
             } else {
                 initializeBluetoothAdapter();
             }
         } else {
-            initializeBluetoothAdapter();
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                }, REQUEST_BLUETOOTH_CONNECT);
+            } else {
+                initializeBluetoothAdapter();
+            }
         }
     }
 
@@ -192,10 +195,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void sendCommand(String command) {
+    private void sendCommand(char command) {
         if (outputStream != null && bluetoothSocket.isConnected()) {
             try {
-                outputStream.write(command.getBytes());
+                outputStream.write(command);
             } catch (IOException e) {
                 Log.e(TAG, "Failed to send command", e);
                 Toast.makeText(this, "Failed to send command", Toast.LENGTH_SHORT).show();
@@ -207,15 +210,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void startListeningForData() {
         new Thread(() -> {
-            byte[] buffer = new byte[1024]; // Buffer chứa dữ liệu nhận được
-            int bytes; // Số byte thực tế nhận được
+            byte[] buffer = new byte[1024];
+            int bytes;
 
             while (bluetoothSocket != null && bluetoothSocket.isConnected()) {
                 try {
-                    // Đọc dữ liệu từ InputStream
                     bytes = inputStream.read(buffer);
-                    String receivedData = new String(buffer, 0, bytes); // Chuyển đổi byte thành chuỗi
-                    runOnUiThread(() -> dataTextView.setText(receivedData)); // Cập nhật TextView trên UI thread
+                    String receivedData = new String(buffer, 0, bytes);
+                    runOnUiThread(() -> dataTextView.setText(receivedData));
                 } catch (IOException e) {
                     Log.e(TAG, "Error reading data", e);
                     break;
