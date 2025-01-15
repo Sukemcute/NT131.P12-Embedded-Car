@@ -18,15 +18,17 @@ const int LINE_FOLLOWING_SENSOR_MIDDLE = 4;
 const int LINE_FOLLOWING_SENSOR_RIGHT = 10;
 
 Servo servo;
-SoftwareSerial bluetooth(0, 1); 
+SoftwareSerial bluetooth(0, 1);
 
-enum Mode {
+enum Mode
+{
   BLUETOOTH_MODE,
   LINE_FOLLOWING_MODE,
   OBSTACLE_AVOIDANCE_MODE
 };
 
-enum CarState {
+enum CarState
+{
   FORWARD,
   TURN_RIGHT,
   TURN_LEFT,
@@ -36,7 +38,8 @@ enum CarState {
 
 Mode currentMode = BLUETOOTH_MODE;
 
-void setup() {
+void setup()
+{
   pinMode(ULTRASONIC_TRIGGER_PIN, OUTPUT);
   pinMode(ULTRASONIC_ECHO_PIN, INPUT);
   pinMode(RIGHT_MOTOR_IN1, OUTPUT);
@@ -55,64 +58,72 @@ void setup() {
   setServoToCenter();
 }
 
-void loop() {
-  if (bluetooth.available()) {
+void loop()
+{
+  if (bluetooth.available())
+  {
     char command = bluetooth.read();
-    
-    // Mode selection
-    switch (command) {
-      case '1':
-        currentMode = BLUETOOTH_MODE;
-        break;
-      case '2':
-        currentMode = LINE_FOLLOWING_MODE;
-        break;
-      case '3':
-        currentMode = OBSTACLE_AVOIDANCE_MODE;
-        break;
+
+    switch (command)
+    {
+    case 'L':
+      currentMode = LINE_FOLLOWING_MODE;
+      break;
+    case 'A':
+      currentMode = OBSTACLE_AVOIDANCE_MODE;
+      break;
+
+    default:
+      currentMode = BLUETOOTH_MODE;
+      break;
     }
-    
-    if (currentMode == BLUETOOTH_MODE) {
+
+    if (currentMode == BLUETOOTH_MODE)
+    {
       handleBluetoothCommands(command);
     }
   }
 
-  switch (currentMode) {
-    case BLUETOOTH_MODE:
-      // Commands handled in bluetooth.available() check
-      break;
-    
-    case LINE_FOLLOWING_MODE:
-      executeLineFollowing();
-      break;
-    
-    case OBSTACLE_AVOIDANCE_MODE:
-      executeObstacleAvoidance();
-      break;
+  switch (currentMode)
+  {
+  case BLUETOOTH_MODE:
+    // Commands handled in bluetooth.available() check
+    break;
+
+  case LINE_FOLLOWING_MODE:
+    executeLineFollowing();
+    break;
+
+  case OBSTACLE_AVOIDANCE_MODE:
+    executeObstacleAvoidance();
+    break;
   }
 }
 
-void handleBluetoothCommands(char command) {
-  switch (command) {
-    case 'F':
-      moveForwardWithSpeed(100);
-      break;
-    case 'B':
-      moveBackwardWithSpeed(100);
-      break;
-    case 'L':
-      turnLeftWithSpeed(50);
-      break;
-    case 'R':
-      turnRightWithSpeed(50);
-      break;
-    default:
-      stopCar();
-      break;
+void handleBluetoothCommands(char command)
+{
+  switch (command)
+  {
+  case 'F':
+    moveForwardWithSpeed(100);
+    break;
+  case 'B':
+    moveBackwardWithSpeed(100);
+    break;
+  case 'L':
+    turnLeftWithSpeed(50);
+    break;
+  case 'R':
+    turnRightWithSpeed(50);
+    break;
+  default:
+    stopCar();
+    break;
   }
 }
 
-void executeLineFollowing() {
+void executeLineFollowing()
+{
   int leftSensor = digitalRead(LINE_FOLLOWING_SENSOR_LEFT);
   int middleSensor = digitalRead(LINE_FOLLOWING_SENSOR_MIDDLE);
   int rightSensor = digitalRead(LINE_FOLLOWING_SENSOR_RIGHT);
@@ -121,31 +132,41 @@ void executeLineFollowing() {
   executeState(state);
 }
 
-void executeObstacleAvoidance() {
+void executeObstacleAvoidance()
+{
   long distanceToObstacle = calculateUltrasonicDistance();
 
-  if (distanceToObstacle > 30 || distanceToObstacle == 0) {
+  if (distanceToObstacle > 30 || distanceToObstacle == 0)
+  {
     moveForwardWithSpeed(200);
-  } else {
+  }
+  else
+  {
     stopCar();
     delay(300);
-    
+
     long distanceLeft = turnLeftAndMeasureDistance();
     long distanceRight = turnRightAndMeasureDistance();
 
-    if (distanceLeft < 15 && distanceRight < 15) {
+    if (distanceLeft < 15 && distanceRight < 15)
+    {
       moveBackwardWithSpeed(200);
       delay(300);
       stopCar();
-    } else {
-      if (distanceRight >= distanceLeft) {
+    }
+    else
+    {
+      if (distanceRight >= distanceLeft)
+      {
         delay(300);
         stopCar();
         delay(300);
         turnLeftWithSpeed(200);
         delay(350);
         stopCar();
-      } else {
+      }
+      else
+      {
         delay(300);
         stopCar();
         delay(300);
@@ -157,7 +178,8 @@ void executeObstacleAvoidance() {
   }
 }
 
-CarState determineState(int leftSensor, int middleSensor, int rightSensor) {
+CarState determineState(int leftSensor, int middleSensor, int rightSensor)
+{
   if (middleSensor == LOW)
     return FORWARD;
   if (rightSensor == LOW && leftSensor != LOW)
@@ -167,27 +189,30 @@ CarState determineState(int leftSensor, int middleSensor, int rightSensor) {
   return BACKWARD;
 }
 
-void executeState(CarState state) {
-  switch (state) {
-    case FORWARD:
-      moveForwardWithSpeed(100);
-      break;
-    case TURN_RIGHT:
-      turnRightWithSpeed(100);
-      break;
-    case TURN_LEFT:
-      turnLeftWithSpeed(100);
-      break;
-    case BACKWARD:
-      moveBackwardWithSpeed(100);
-      break;
-    case STOP:
-      stopCar();
-      break;
+void executeState(CarState state)
+{
+  switch (state)
+  {
+  case FORWARD:
+    moveForwardWithSpeed(100);
+    break;
+  case TURN_RIGHT:
+    turnRightWithSpeed(100);
+    break;
+  case TURN_LEFT:
+    turnLeftWithSpeed(100);
+    break;
+  case BACKWARD:
+    moveBackwardWithSpeed(100);
+    break;
+  case STOP:
+    stopCar();
+    break;
   }
 }
 
-long calculateUltrasonicDistance() {
+long calculateUltrasonicDistance()
+{
   digitalWrite(ULTRASONIC_TRIGGER_PIN, LOW);
   delayMicroseconds(2);
   digitalWrite(ULTRASONIC_TRIGGER_PIN, HIGH);
@@ -198,7 +223,8 @@ long calculateUltrasonicDistance() {
   return (duration == 0) ? 999 : duration * 0.034 / 2;
 }
 
-long turnLeftAndMeasureDistance() {
+long turnLeftAndMeasureDistance()
+{
   servo.write(0);
   delay(500);
   long distance = calculateUltrasonicDistance();
@@ -206,7 +232,8 @@ long turnLeftAndMeasureDistance() {
   return distance;
 }
 
-long turnRightAndMeasureDistance() {
+long turnRightAndMeasureDistance()
+{
   servo.write(180);
   delay(500);
   long distance = calculateUltrasonicDistance();
@@ -214,11 +241,13 @@ long turnRightAndMeasureDistance() {
   return distance;
 }
 
-void setServoToCenter() {
+void setServoToCenter()
+{
   servo.write(90);
 }
 
-void moveForwardWithSpeed(int speed) {
+void moveForwardWithSpeed(int speed)
+{
   digitalWrite(RIGHT_MOTOR_IN1, HIGH);
   digitalWrite(RIGHT_MOTOR_IN2, LOW);
   analogWrite(RIGHT_MOTOR_ENA, speed);
@@ -228,7 +257,8 @@ void moveForwardWithSpeed(int speed) {
   analogWrite(LEFT_MOTOR_ENB, speed);
 }
 
-void moveBackwardWithSpeed(int speed) {
+void moveBackwardWithSpeed(int speed)
+{
   digitalWrite(RIGHT_MOTOR_IN1, LOW);
   digitalWrite(RIGHT_MOTOR_IN2, HIGH);
   analogWrite(RIGHT_MOTOR_ENA, speed);
@@ -238,7 +268,8 @@ void moveBackwardWithSpeed(int speed) {
   analogWrite(LEFT_MOTOR_ENB, speed);
 }
 
-void turnLeftWithSpeed(int speed) {
+void turnLeftWithSpeed(int speed)
+{
   digitalWrite(RIGHT_MOTOR_IN1, HIGH);
   digitalWrite(RIGHT_MOTOR_IN2, LOW);
   analogWrite(RIGHT_MOTOR_ENA, speed);
@@ -248,7 +279,8 @@ void turnLeftWithSpeed(int speed) {
   analogWrite(LEFT_MOTOR_ENB, speed);
 }
 
-void turnRightWithSpeed(int speed) {
+void turnRightWithSpeed(int speed)
+{
   digitalWrite(RIGHT_MOTOR_IN1, LOW);
   digitalWrite(RIGHT_MOTOR_IN2, HIGH);
   analogWrite(RIGHT_MOTOR_ENA, speed);
@@ -258,7 +290,8 @@ void turnRightWithSpeed(int speed) {
   analogWrite(LEFT_MOTOR_ENB, speed);
 }
 
-void stopCar() {
+void stopCar()
+{
   digitalWrite(RIGHT_MOTOR_IN1, LOW);
   digitalWrite(RIGHT_MOTOR_IN2, LOW);
   analogWrite(RIGHT_MOTOR_ENA, 0);
